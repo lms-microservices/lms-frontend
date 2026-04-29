@@ -1,8 +1,20 @@
-const StudentLayout = ({ children }) => {
+import { Outlet } from 'react-router';
+import { useAuth } from '../store/AuthContext';
+import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
+
+const StudentLayout = () => {
+  const { user } = useAuth();
+
   return (
-    <div style={{ border: "3px solid blue", padding: 20 }}>
-      <h2>STUDENT LAYOUT</h2>
-      <div>{children}</div>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="flex">
+        <Sidebar role={user?.role} />
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

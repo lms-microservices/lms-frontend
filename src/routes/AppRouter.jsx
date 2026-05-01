@@ -13,6 +13,7 @@ import InstructorDashboard from '../features/dashboard/InstructorDashboard';
 import StudentDashboard from '../features/dashboard/StudentDashboard';
 import AuditLogsPage from '../features/audit/AuditLogsPage';
 import UserManagement from '../features/dashboard/UserManagement';
+import RolePermissionsManagement from '../features/dashboard/RolePermissionsManagement';
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -28,6 +29,7 @@ const AppRouter = () => (
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<UserManagement />} />
+        <Route path="roles" element={<RolePermissionsManagement />} />
         <Route path="audit" element={<AuditLogsPage />} />
       </Route>
 

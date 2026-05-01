@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { userApi } from '../../api/userApi';
-import { ROLES } from '../../utils/constants';
+import { roleApi } from '../../api/roleApi';
+import { PERMISSIONS, ROLES } from '../../utils/constants';
+import { useAuth } from '../../store/AuthContext';
 import RoleBadge from '../../components/common/RoleBadge';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
@@ -9,7 +11,9 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
+  const [roles, setRoles] = useState([]);
   const [error, setError] = useState('');
+  const { hasPermission } = useAuth();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -29,9 +33,17 @@ const UserManagement = () => {
     fetchUsers();
   }, [roleFilter]);
 
-  const handleRoleChange = async (userId, newRole) => {
+  useEffect(() => {
+    if (!hasPermission(PERMISSIONS.ROLES_MANAGE)) return;
+
+    roleApi.getRoles()
+      .then(setRoles)
+      .catch((err) => console.error('Failed to load roles', err));
+  }, []);
+
+  const handleRoleChange = async (userId, roleId) => {
     try {
-      await userApi.updateRole(userId, newRole);
+      await roleApi.assignRoleToUser(userId, Number(roleId));
       fetchUsers();
     } catch (err) {
       setError('Failed to update role');
@@ -103,22 +115,27 @@ const UserManagement = () => {
                     <td className="px-4 py-3 font-medium text-gray-900">{u.name || 'N/A'}</td>
                     <td className="px-4 py-3 text-gray-600">{u.email}</td>
                     <td className="px-4 py-3">
-                      <RoleBadge role={u.role} />
+                      <RoleBadge role={u.roleName || u.role} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          className="px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500/20"
-                        >
-                          <option value={ROLES.STUDENT}>Student</option>
-                          <option value={ROLES.INSTRUCTOR}>Instructor</option>
-                          <option value={ROLES.ADMIN}>Admin</option>
-                        </select>
-                        <Button variant="danger" size="sm" onClick={() => handleDelete(u.id)}>
-                          Delete
-                        </Button>
+                        {hasPermission(PERMISSIONS.ROLES_MANAGE) && (
+                          <select
+                            value={roles.find((role) => role.name === (u.roleName || u.role))?.id || ''}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                            className="px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500/20"
+                          >
+                            <option value="" disabled>Choose role</option>
+                            {roles.map((role) => (
+                              <option key={role.id} value={role.id}>{role.name}</option>
+                            ))}
+                          </select>
+                        )}
+                        {hasPermission(PERMISSIONS.USERS_DELETE) && (
+                          <Button variant="danger" size="sm" onClick={() => handleDelete(u.id)}>
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

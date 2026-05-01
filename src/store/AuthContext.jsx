@@ -7,14 +7,16 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
     const name = localStorage.getItem('name');
-    return token ? { token, role, name } : null;
+    const permissions = JSON.parse(localStorage.getItem('permissions') || '[]');
+    return token ? { token, role, name, permissions } : null;
   });
 
-  const login = ({ token, role, name }) => {
+  const login = ({ token, role, name, permissions = [] }) => {
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     localStorage.setItem('name', name);
-    setUser({ token, role, name });
+    localStorage.setItem('permissions', JSON.stringify(permissions));
+    setUser({ token, role, name, permissions });
   };
 
   const logout = () => {
@@ -22,8 +24,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const hasPermission = (permission) => Boolean(user?.permissions?.includes(permission));
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

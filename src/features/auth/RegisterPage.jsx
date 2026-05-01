@@ -36,6 +36,7 @@ const RegisterPage = () => {
         token: response.accessToken,
         role: response.role,
         name: response.email.split('@')[0],
+        permissions: response.permissions || [],
       });
 
       switch (response.role) {

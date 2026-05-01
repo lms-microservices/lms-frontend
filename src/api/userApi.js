@@ -18,7 +18,7 @@ export const userApi = {
   },
 
   delete: async (id) => {
-    const response = await axiosInstance.delete(`${API_BASE_URL}/users/${id}`);
+    const response = await axiosInstance.delete(`${API_BASE_URL}/auth/users/${id}`);
     return response.data;
   },
 

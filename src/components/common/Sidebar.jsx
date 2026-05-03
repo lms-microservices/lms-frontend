@@ -4,6 +4,7 @@ import { useAuth } from '../../store/AuthContext';
 
 const Sidebar = ({ role }) => {
   const { hasPermission } = useAuth();
+  const rolePrefix = role?.toLowerCase();
 
   const links = {
     [ROLES.ADMIN]: [
@@ -31,8 +32,8 @@ const Sidebar = ({ role }) => {
   );
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 min-h-[calc(100vh-4rem)] p-4">
-      <nav className="space-y-1">
+    <aside className="w-64 bg-white border-r border-gray-100 min-h-[calc(100vh-4rem)] p-4 flex flex-col">
+      <nav className="space-y-1 flex-1">
         {navLinks.map((link) => (
           <NavLink
             key={link.to}
@@ -50,6 +51,22 @@ const Sidebar = ({ role }) => {
           </NavLink>
         ))}
       </nav>
+
+      <div className="pt-4 border-t border-gray-100 mt-4">
+        <NavLink
+          to={`/${rolePrefix}/profile`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition ${
+              isActive
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`
+          }
+        >
+          {iconPath('M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z')}
+          Profile
+        </NavLink>
+      </div>
     </aside>
   );
 };

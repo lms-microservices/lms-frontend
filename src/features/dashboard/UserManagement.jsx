@@ -3,6 +3,7 @@ import { userApi } from '../../api/userApi';
 import { roleApi } from '../../api/roleApi';
 import { PERMISSIONS, ROLES } from '../../utils/constants';
 import { useAuth } from '../../store/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import RoleBadge from '../../components/common/RoleBadge';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
@@ -12,8 +13,8 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState('');
   const [roles, setRoles] = useState([]);
-  const [error, setError] = useState('');
   const { hasPermission } = useAuth();
+  const { success, error: showError } = useToast();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -22,8 +23,8 @@ const UserManagement = () => {
       if (roleFilter) params.role = roleFilter;
       const data = await userApi.getAll(params);
       setUsers(data.items || data);
-    } catch (err) {
-      console.error('Failed to load users', err);
+    } catch {
+      showError('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -38,16 +39,16 @@ const UserManagement = () => {
 
     roleApi.getRoles()
       .then(setRoles)
-      .catch((err) => console.error('Failed to load roles', err));
+      .catch(() => showError('Failed to load roles'));
   }, []);
 
   const handleRoleChange = async (userId, roleId) => {
     try {
       await roleApi.assignRoleToUser(userId, Number(roleId));
+      success('User role updated successfully');
       fetchUsers();
-    } catch (err) {
-      setError('Failed to update role');
-      setTimeout(() => setError(''), 3000);
+    } catch {
+      showError('Failed to update user role');
     }
   };
 
@@ -55,9 +56,10 @@ const UserManagement = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
       await userApi.delete(userId);
+      success('User deleted successfully');
       fetchUsers();
-    } catch (err) {
-      setError('Failed to delete user');
+    } catch {
+      showError('Failed to delete user');
     }
   };
 
@@ -79,12 +81,6 @@ const UserManagement = () => {
           <option value={ROLES.STUDENT}>Student</option>
         </select>
       </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         {loading ? (

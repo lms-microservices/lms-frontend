@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { authApi } from '../../api/authApi';
 import { useAuth } from '../../store/AuthContext';
@@ -10,7 +10,13 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login, isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthLoading && user?.token) {
+      navigate(`/${user.role.toLowerCase()}/dashboard`, { replace: true });
+    }
+  }, [user, isAuthLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +27,7 @@ const LoginPage = () => {
       const response = await authApi.login(email, password);
       login({
         token: response.accessToken,
+        refreshToken: response.refreshToken,
         role: response.role,
         name: response.email.split('@')[0],
         permissions: response.permissions || [],
@@ -44,6 +51,14 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-6 h-6 animate-spin rounded-full border-2 border-gray-200 border-t-gray-900" />
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

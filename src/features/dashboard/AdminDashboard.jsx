@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { userApi } from '../../api/userApi';
 import { ROLES } from '../../utils/constants';
+import { useToast } from '../../context/ToastContext';
 import RoleBadge from '../../components/common/RoleBadge';
 import Button from '../../components/common/Button';
-import Loader from '../../components/common/Loader';
+import { SkeletonCard, SkeletonTable } from '../../components/common/Skeleton';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { error: showError } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,8 +23,8 @@ const AdminDashboard = () => {
         ]);
         setStats(statsRes);
         setRecentUsers(usersRes.items || usersRes);
-      } catch (err) {
-        console.error('Failed to load dashboard data', err);
+      } catch {
+        showError('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -28,20 +32,27 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader size="lg" />
-      </div>
-    );
-  }
-
   const statCards = [
     { label: 'Total Users', value: stats?.total || 0, color: 'bg-gray-900' },
     { label: 'Admins', value: stats?.admins || 0, color: 'bg-red-500' },
     { label: 'Instructors', value: stats?.instructors || 0, color: 'bg-blue-500' },
     { label: 'Students', value: stats?.students || 0, color: 'bg-green-500' },
   ];
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="h-6 w-40 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-56 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+        <SkeletonTable rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,7 +74,7 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-xl border border-gray-100">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Recent Users</h2>
-          <Button variant="secondary" size="sm" onClick={() => window.location.href = '/admin/users'}>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/admin/users')}>
             View All
           </Button>
         </div>

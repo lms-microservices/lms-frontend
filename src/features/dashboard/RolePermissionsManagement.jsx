@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { roleApi } from '../../api/roleApi';
+import { useToast } from '../../context/ToastContext';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 
@@ -11,7 +12,7 @@ const RolePermissionsManagement = () => {
   const [permissionName, setPermissionName] = useState('');
   const [permissionDescription, setPermissionDescription] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { success, error: showError } = useToast();
 
   const selectedRole = useMemo(
     () => roles.find((role) => String(role.id) === String(selectedRoleId)),
@@ -28,8 +29,8 @@ const RolePermissionsManagement = () => {
       setRoles(nextRoles);
       setPermissions(nextPermissions);
       setSelectedRoleId((current) => current || nextRoles[0]?.id || '');
-    } catch (err) {
-      setError('Failed to load roles and permissions');
+    } catch {
+      showError('Failed to load roles and permissions');
     } finally {
       setLoading(false);
     }
@@ -53,8 +54,9 @@ const RolePermissionsManagement = () => {
       setRoleName('');
       await loadData();
       setSelectedRoleId(role.id);
+      success(`Role "${role.name}" created`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create role');
+      showError(err.response?.data?.message || 'Failed to create role');
     }
   };
 
@@ -70,19 +72,30 @@ const RolePermissionsManagement = () => {
       setPermissionName('');
       setPermissionDescription('');
       await loadData();
+      success('Permission created');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create permission');
+      showError(err.response?.data?.message || 'Failed to create permission');
     }
   };
 
   const addPermission = async (permissionId) => {
-    await roleApi.addPermissionToRole(selectedRole.id, permissionId);
-    await loadData();
+    try {
+      await roleApi.addPermissionToRole(selectedRole.id, permissionId);
+      await loadData();
+      success('Permission added to role');
+    } catch {
+      showError('Failed to add permission');
+    }
   };
 
   const removePermission = async (permission) => {
-    await roleApi.removePermissionFromRole(selectedRole.id, permission.id);
-    await loadData();
+    try {
+      await roleApi.removePermissionFromRole(selectedRole.id, permission.id);
+      await loadData();
+      success('Permission removed from role');
+    } catch {
+      showError('Failed to remove permission');
+    }
   };
 
   const deleteRole = async () => {
@@ -93,8 +106,9 @@ const RolePermissionsManagement = () => {
       await roleApi.deleteRole(selectedRole.id);
       setSelectedRoleId('');
       await loadData();
+      success('Role deleted');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete role');
+      showError(err.response?.data?.message || 'Failed to delete role');
     }
   };
 
@@ -112,12 +126,6 @@ const RolePermissionsManagement = () => {
         <h1 className="text-xl font-semibold text-gray-900">Roles & Permissions</h1>
         <p className="text-sm text-gray-500 mt-1">Manage role bundles and their permissions</p>
       </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[18rem_1fr] gap-6">
         <section className="bg-white rounded-xl border border-gray-100 p-4">
